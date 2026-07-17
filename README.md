@@ -179,4 +179,4 @@ Type checking is `npm run typecheck`.
 
 ## License
 
-ISC
+MIT — see [LICENSE](LICENSE).

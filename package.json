@@ -17,7 +17,7 @@
     "agent"
   ],
   "author": "Masahiro Hanawa",
-  "license": "ISC",
+  "license": "MIT",
   "description": "Voice-first task capture into a shared Todoist, driven by a local LLM over MCP",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
