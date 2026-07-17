@@ -1,0 +1,32 @@
+{
+  "name": "todoist-agent",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "start": "tsx src/index.ts",
+    "serve": "tsx src/server.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "todoist",
+    "mcp",
+    "model-context-protocol",
+    "llama.cpp",
+    "local-llm",
+    "agent"
+  ],
+  "author": "Masahiro Hanawa",
+  "license": "ISC",
+  "description": "Voice-first task capture into a shared Todoist, driven by a local LLM over MCP",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "dotenv": "^17.4.2",
+    "openai": "^6.47.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "tsx": "^4.23.1",
+    "typescript": "^7.0.2"
+  }
+}
