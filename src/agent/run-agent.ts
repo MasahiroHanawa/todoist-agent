@@ -1,5 +1,5 @@
 import type OpenAI from "openai";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { TodoistMcp } from "../mcp/client";
 import { llmTools } from "./tools";
 import { callTodoistTool } from "../mcp/todoist";
 
@@ -65,7 +65,7 @@ async function createCompletionWithRetry(
 
 export interface AgentDeps {
   llm: OpenAI;
-  mcp: Client;
+  mcp: TodoistMcp;
   model: string;
 }
 

@@ -5,6 +5,10 @@ import { createLlmClient } from "./llm/client";
 import { connectTodoistMcp } from "./mcp/client";
 import { runAgent } from "./agent/run-agent";
 
+// Captures are short lines of text; anything larger than this is not a real
+// request, so cap the body to avoid buffering unbounded input into memory.
+const MAX_BODY_BYTES = 1_000_000; // 1 MB
+
 // Pulls the shared token out of a request.
 // Accepts either `X-Auth-Token: <token>` or `Authorization: Bearer <token>`.
 function extractToken(req: IncomingMessage): string | undefined {
@@ -38,6 +42,9 @@ async function main() {
   const mcp = await connectTodoistMcp(config.todoistApiKey);
 
   const port = Number(process.env.PORT ?? 8787);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error(`Invalid PORT: ${JSON.stringify(process.env.PORT)}`);
+  }
 
   // Authentication is required whenever AGENT_TOKEN is set. Left unset, the server
   // assumes LAN-only local use and runs unauthenticated — it warns at startup, and
@@ -64,11 +71,50 @@ async function main() {
       }
     }
 
-    let body = "";
-    req.on("data", (chunk) => {
-      body += chunk;
+    // Buffer the raw bytes and decode once at the end. Concatenating chunks as
+    // strings can split a multi-byte UTF-8 character across a chunk boundary and
+    // corrupt it — which matters here, since the captures are Japanese.
+    const chunks: Buffer[] = [];
+    let bodyBytes = 0;
+    let aborted = false;
+
+    req.on("error", (error) => {
+      console.error(error);
+      if (!res.headersSent) {
+        res.writeHead(400, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: "request error" }));
+      }
     });
+
+    req.on("data", (chunk: Buffer) => {
+      if (aborted) {
+        return;
+      }
+      bodyBytes += chunk.length;
+      if (bodyBytes > MAX_BODY_BYTES) {
+        aborted = true;
+        res.writeHead(413, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: "payload too large" }));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+
     req.on("end", async () => {
+      if (aborted) {
+        return;
+      }
+      const body = Buffer.concat(chunks).toString("utf8");
+
+      // Set DEBUG_REQUESTS=1 to dump the raw body and content-type, for inspecting
+      // exactly what a client (e.g. an iOS Shortcut) is sending.
+      if (process.env.DEBUG_REQUESTS) {
+        console.log(
+          `[debug] content-type=${req.headers["content-type"] ?? "(none)"} raw=${JSON.stringify(body)}`,
+        );
+      }
+
       // Accepts JSON {"text": "..."} as well as raw text
       let text = body.trim();
       try {

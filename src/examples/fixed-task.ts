@@ -11,9 +11,8 @@ async function addTaskToProject(
   projectName: string,
   content: string,
 ) {
-  const projectResult = await client.callTool({
-    name: "find-projects",
-    arguments: { search: projectName },
+  const projectResult = await client.callTool("find-projects", {
+    search: projectName,
   });
 
   const projects = parseProjects(projectResult.structuredContent);
@@ -25,11 +24,8 @@ async function addTaskToProject(
     throw new Error(`Project not found: ${projectName}`);
   }
 
-  const addResult = await client.callTool({
-    name: "add-tasks",
-    arguments: {
-      tasks: [{ content, projectId: project.id }],
-    },
+  const addResult = await client.callTool("add-tasks", {
+    tasks: [{ content, projectId: project.id }],
   });
 
   console.dir(addResult, { depth: null });

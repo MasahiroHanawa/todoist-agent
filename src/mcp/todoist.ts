@@ -1,4 +1,4 @@
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { TodoistMcp } from "./client";
 
 // Tool names exposed to the LLM -> tool names on the Todoist MCP side.
 const TOOL_NAME_MAP: Record<string, string> = {
@@ -20,14 +20,11 @@ export function toMcpToolName(llmToolName: string): string {
 // Translates an LLM tool call into an MCP tool call, runs it, and returns the raw
 // result to hand back to the LLM (structuredContent preferred).
 export async function callTodoistTool(
-  client: Client,
+  mcp: TodoistMcp,
   llmToolName: string,
   args: Record<string, unknown>,
 ): Promise<unknown> {
-  const result = await client.callTool({
-    name: toMcpToolName(llmToolName),
-    arguments: args,
-  });
+  const result = await mcp.callTool(toMcpToolName(llmToolName), args);
   return result.structuredContent ?? result.content;
 }
 
